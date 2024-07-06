@@ -314,6 +314,132 @@ internal static partial class SpellBuilders
 
     #endregion
 
+    #region Storm Sphere
+
+    internal static SpellDefinition BuildStormSphere()
+    {
+        const string NAME = "StormSphere";
+
+        var conditionMark = ConditionDefinitionBuilder
+            .Create($"Condition{NAME}Mark")
+            .SetGuiPresentationNoContent(true)
+            .SetSilent(Silent.WhenAddedOrRemoved)
+            .AddToDB();
+
+        var power = FeatureDefinitionPowerBuilder
+            .Create($"Power{NAME}")
+            .SetGuiPresentation(Category.Feature, PowerCallLightning)
+            .SetUsesFixed(ActivationTime.BonusAction)
+            .SetUseSpellAttack()
+            .SetEffectDescription(
+                EffectDescriptionBuilder
+                    .Create()
+                    .SetTargetingData(Side.Enemy, RangeType.RangeHit, 12, TargetType.IndividualsUnique)
+                    .SetEffectForms(
+                        EffectFormBuilder
+                            .Create()
+                            .SetDamageForm(DamageTypeLightning, 4, DieType.D6)
+                            .Build())
+                    .SetParticleEffectParameters(PowerCallLightning)
+                    .Build())
+            .AddToDB();
+
+        power.AddCustomSubFeatures(new ModifyEffectDescriptionPowerStormSphere(power, conditionMark));
+
+        var conditionSelf = ConditionDefinitionBuilder
+            .Create($"Condition{NAME}Self")
+            .SetGuiPresentationNoContent(true)
+            .SetSilent(Silent.WhenAddedOrRemoved)
+            .SetFeatures(power)
+            .AddCustomSubFeatures(AddUsablePowersFromCondition.Marker)
+            .AddToDB();
+
+        var spell = SpellDefinitionBuilder
+            .Create(NAME)
+            .SetGuiPresentation(Category.Spell, Sprites.GetSprite(NAME, Resources.StormSphere, 128))
+            .SetSchoolOfMagic(SchoolOfMagicDefinitions.SchoolEvocation)
+            .SetSpellLevel(4)
+            .SetCastingTime(ActivationTime.Action)
+            .SetMaterialComponent(MaterialComponentType.Mundane)
+            .SetSomaticComponent(true)
+            .SetVerboseComponent(true)
+            .SetVocalSpellSameType(VocalSpellSemeType.Attack)
+            .SetRequiresConcentration(true)
+            .SetEffectDescription(
+                EffectDescriptionBuilder
+                    .Create()
+                    .SetDurationData(DurationType.Minute, 1)
+                    .SetTargetingData(Side.All, RangeType.Distance, 24, TargetType.Sphere, 5)
+                    .SetSavingThrowData(false, AttributeDefinitions.Strength, false,
+                        EffectDifficultyClassComputation.SpellCastingFeature)
+                    .SetEffectAdvancement(EffectIncrementMethod.PerAdditionalSlotLevel, additionalDicePerIncrement: 1)
+                    .SetRecurrentEffect(RecurrentEffect.OnActivation | RecurrentEffect.OnTurnEnd)
+                    .SetEffectForms(
+                        EffectFormBuilder
+                            .Create()
+                            .HasSavingThrow(EffectSavingThrowType.HalfDamage)
+                            .SetDamageForm(DamageTypeBludgeoning, 2, DieType.D6)
+                            .Build(),
+                        EffectFormBuilder
+                            .Create()
+                            .SetSummonEffectProxyForm(EffectProxyDefinitions.ProxyGustOfWind)
+                            .Build(),
+                        EffectFormBuilder
+                            .Create()
+                            .SetTopologyForm(TopologyForm.Type.DifficultThrough, true)
+                            .Build(),
+                        EffectFormBuilder.ConditionForm(conditionMark),
+                        EffectFormBuilder.ConditionForm(
+                            conditionSelf,
+                            ConditionForm.ConditionOperation.Add, true, true))
+                    .SetParticleEffectParameters(CallLightning)
+                    .Build())
+            .AddToDB();
+
+        return spell;
+    }
+
+    private sealed class ModifyEffectDescriptionPowerStormSphere(
+        FeatureDefinitionPower powerStormSphere,
+        ConditionDefinition conditionEnemy) : IModifyEffectDescription, IModifyAttackActionModifier
+    {
+        public void OnAttackComputeModifier(
+            RulesetCharacter myself,
+            RulesetCharacter defender,
+            BattleDefinitions.AttackProximity attackProximity,
+            RulesetAttackMode attackMode,
+            string effectName,
+            ref ActionModifier attackModifier)
+        {
+            if (!defender.HasConditionOfCategoryAndType(
+                    AttributeDefinitions.TagEffect, conditionEnemy.Name))
+            {
+                return;
+            }
+
+            attackModifier.AttackAdvantageTrends.Add(new TrendInfo(1, FeatureSourceType.Power, powerStormSphere.Name,
+                powerStormSphere));
+        }
+
+        public bool IsValid(BaseDefinition definition, RulesetCharacter character, EffectDescription effectDescription)
+        {
+            return definition == powerStormSphere;
+        }
+
+        public EffectDescription GetEffectDescription(
+            BaseDefinition definition,
+            EffectDescription effectDescription,
+            RulesetCharacter character,
+            RulesetEffect rulesetEffect)
+        {
+            effectDescription.EffectForms[0].DamageForm.DiceNumber = character.ConcentratedSpell?.EffectLevel ?? 4;
+
+            return effectDescription;
+        }
+    }
+
+    #endregion
+
     #region Vitriolic Sphere
 
     internal static SpellDefinition BuildVitriolicSphere()

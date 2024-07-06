@@ -232,6 +232,7 @@ internal static partial class SpellBuilders
             .SetSomaticComponent(true)
             .SetVerboseComponent(true)
             .SetVocalSpellSameType(VocalSpellSemeType.Buff)
+            .SetRequiresConcentration(true)
             .SetEffectDescription(
                 EffectDescriptionBuilder
                     .Create()
@@ -277,7 +278,6 @@ internal static partial class SpellBuilders
                                 ])
                             .Build())
                     .Build())
-            .SetRequiresConcentration(true)
             .AddToDB();
     }
 

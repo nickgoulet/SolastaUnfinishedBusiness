@@ -754,6 +754,9 @@ internal static partial class DatabaseHelper
 
     internal static class EffectProxyDefinitions
     {
+        internal static EffectProxyDefinition ProxyGustOfWind { get; } =
+            GetDefinition<EffectProxyDefinition>("ProxyGustOfWind");
+
         internal static EffectProxyDefinition ProxyDelayedBlastFireball { get; } =
             GetDefinition<EffectProxyDefinition>("ProxyDelayedBlastFireball");
 
@@ -1724,6 +1727,9 @@ internal static partial class DatabaseHelper
 
     internal static class FeatureDefinitionPowers
     {
+        internal static FeatureDefinitionPower PowerCallLightning { get; } =
+            GetDefinition<FeatureDefinitionPower>("PowerCallLightning");
+
         internal static FeatureDefinitionPower PowerBulette_Snow_Leap { get; } =
             GetDefinition<FeatureDefinitionPower>("PowerBulette_Snow_Leap");
 

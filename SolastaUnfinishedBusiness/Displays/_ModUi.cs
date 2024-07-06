@@ -258,6 +258,7 @@ internal static class ModUi
         "StaggeringSmite",
         "StarryWisp",
         "SteelWhirlwind",
+        "StormSphere",
         "StrikeWithTheWind",
         "SwordStorm",
         "SynapticStatic",
